@@ -6,19 +6,18 @@
 
 package com.joaosantacruz.songmemo;
 
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
+import android.media.MediaRecorder;
+import android.util.Log;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
-import android.media.MediaRecorder;
-import android.util.Log;
-
 public class Track {
-
 
 	static final String APPDIR = "/sdcard/SongMemo/";
 	static final String PREFIX = "track_";
@@ -36,28 +35,18 @@ public class Track {
 
 	private int playCurrentPosition = 0;
 
-
 	private String trackName = "";
 	private String trackPath = "";
 	private String trackNumber = "";
 	private String songName = "";
 	private String lastUpdate = "";
 
-
 	MediaPlayer mediaPlayer = new MediaPlayer();
 	MediaRecorder mediaRecorder = new MediaRecorder();
 
-
-	
-	
-	
-	
-	
 	public Track(String songname, String tracknumber) {
 		
 		try {
-			
-			// Initializing track properties - - - - - 
 			setTrackName(PREFIX + tracknumber);
 			setSongName(songname);
 
@@ -67,14 +56,8 @@ public class Track {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-
 	}
-	
-	
-	
-	
-	
+
 	/*
 	* This method starts to record individual track 
 	* @author joaosantacruz.com
@@ -92,7 +75,7 @@ public class Track {
 			e.printStackTrace();
 		}
 		mediaRecorder.start();
-		
+
 		setLastUpdate(getDateTime());
 		
 		Log.v("JOAO", "TRACK - RECORD Track-" + trackNumber);
@@ -100,15 +83,8 @@ public class Track {
 		isRecording = true;
 		
 		return isRecording;
-
 	}
 
-	
-	
-	
-	
-	
-	
 	/*
 	* This method stops individual track from recording
 	* @author joaosantacruz.com
@@ -117,22 +93,17 @@ public class Track {
 		Log.v("JOAO", "TRACK - STOP record track "+ trackNumber);
 		mediaRecorder.stop();
 		this.isRecording = false;
+
 		return isRecording;
 
 	}
-	
-	
-	
-	
-	
-	
+
 	/*
 	* This method starts to play individual track 
 	* @author joaosantacruz.com
 	*/
 	public boolean startPlaying() {
 
-	
 		mediaPlayer.reset();
 
 		try {
@@ -143,26 +114,20 @@ public class Track {
 		}
 
 		mediaPlayer.start();
-		
-		this.setVolume();
-				
+		setVolume();
 		mediaPlayer.setOnCompletionListener(new OnCompletionListener() {
 
 			public void onCompletion(MediaPlayer arg0) {
-				//mediaPlayer.pause();
 				mediaPlayer.seekTo(0);
 			}
 
 		});
 
-		this.isPlaying = true;
+		isPlaying = true;
+
 		return isPlaying;
 	}
 
-
-
-	
-	
 	/*
 	* This method stops individual track from playing
 	* @author joaosantacruz.com
@@ -179,7 +144,8 @@ public class Track {
 			Log.v(("Song MEMO"), e.getMessage());
 		}
 
-		this.setPlaying(false);
+		setPlaying(false);
+
 		return isPlaying;
 	}
 
@@ -191,16 +157,11 @@ public class Track {
 	boolean pausePlaying() {
 		Log.v("JOAO", "TRACK - STOP play track " + trackNumber);
 		mediaPlayer.pause();
-		this.isPlaying = false;
+		isPlaying = false;
+
 		return isPlaying;
 	}
 
-
-	
-	
-	
-	
-	
 	/*
 	* This method mutes individual track 
 	* @author joaosantacruz.com
@@ -208,19 +169,14 @@ public class Track {
 	public void setMuted(boolean isMuted) {
 		
 		this.isMuted = isMuted;
-		
+
 		if (isMuted) {
 			mediaPlayer.setVolume(0, 0);
 		} else {
 			setVolume();
 		}
-		
-		
 	}
 
-	
-
-	
 	/*
 	* This method get date-time using format 'yyyy-MM-dd HH:mm:ss'
 	* @author joaosantacruz.com
@@ -228,12 +184,10 @@ public class Track {
 	private String getDateTime() {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date date = new Date();
+
 		return dateFormat.format(date);
 	}
 
-	
-	
-	
 	/*
 	* This method prints several vars for debug propose
 	* @author joaosantacruz.com
@@ -256,49 +210,33 @@ public class Track {
 		Log.v("JOAO", " = = = = =  = = = = =  = = = = =  = = = = =  = = = = = ");
 	}
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	/*
 	* This method sets individual track volume 
 	* @author joaosantacruz.com
 	*/
 	public void setVolume() {
-
-		
 		float trackLeftVolume = 0;
 		float trackRightVolume = 0;
 		
-
-		if(balance>50){
-			trackLeftVolume = (100-balance+1)/10;
-		}else{ 
+		if (balance > 50){
+			trackLeftVolume = (100 - balance + 1) / 10;
+		} else {
 			trackLeftVolume = rightVolume; 
 		}
-		if(balance<50){
-			trackRightVolume = (balance+1)/10;
+		if (balance < 50) {
+			trackRightVolume = (balance + 1) / 10;
 		} else {
 			trackRightVolume = leftVolume;
 		}
 		
-		if(this.isMuted){ 
+		if (this.isMuted) {
 			trackRightVolume=0;
 			trackLeftVolume=0;
 		}
 		
 		Log.v("JOAO", "SET VOLUME | mute:"+this.isMuted+" (TRACK-"+trackNumber+" > > > MAIN[L/R]="+ rightVolume +"/" + leftVolume + " - - FINAL[L/R]=" + trackLeftVolume/10 + "/" + trackRightVolume/10 + ") balance("+balance+")");
 		mediaPlayer.setVolume(trackLeftVolume/10, trackRightVolume/10);
-		
 	}
-
-	
-	
 
 	/*
 	* This method toogle track button 
@@ -311,8 +249,8 @@ public class Track {
 		} else {
 			setRecordable(true);
 		}
-		return (isRecordable);
 
+		return isRecordable;
 	}
 
 	/*
@@ -323,7 +261,6 @@ public class Track {
 
 		String filename = trackName + EXTENSION;
 		String filepath = APPDIR + songName + "/" + filename;
-		//
 		File f = new File(filepath);
 
 		if (!f.exists()) {
@@ -335,34 +272,16 @@ public class Track {
 			}
 		} else {
 			if (f.length() > 0) {
-				
 				setRecorded(true);
-				
-				//Log.v("JOAO", "FILE   S I Z E ::: " + f.length() + " - isRecorded= " + isRecorded);
-				
 			}
-			// TODO Tell the user!
-
 		}
 
-		return (filepath);
-
-		// Log.v("JOAO", "CREATING: " + APPDIR + songName + "/" + filename);
-
+		return filepath;
 	}
 
-	
-	
-	
-	
-	
-	
-	
-	
 	public boolean isRecording() {
 		return isRecording;
 	}
-
 	public void setRecording(boolean isRecording) {
 		this.isRecording = isRecording;
 	}
@@ -370,7 +289,6 @@ public class Track {
 	public boolean isPlaying() {
 		return isPlaying;
 	}
-
 	public void setPlaying(boolean isPlaying) {
 		this.isPlaying = isPlaying;
 	}
@@ -382,16 +300,13 @@ public class Track {
 	public String getLastUpdate() {
 		return lastUpdate;
 	}
-
 	public void setLastUpdate(String lastUpdate) {
 		this.lastUpdate = lastUpdate;
 	}
 	
-	
 	public boolean isRecordable() {
 		return isRecordable;
 	}
-
 	public void setRecordable(boolean isRecordable) {
 		this.isRecordable = isRecordable;
 	}
@@ -399,16 +314,13 @@ public class Track {
 	public boolean isRecorded() {
 		return isRecorded;
 	}
-
 	public void setRecorded(boolean isRecorded) {
 		this.isRecorded = isRecorded;
 	}
 
-
 	public int getLeftVolume() {
 		return leftVolume;
 	}
-
 	public void setLeftVolume(int leftVolume) {
 		this.leftVolume = leftVolume;
 	}
@@ -416,16 +328,13 @@ public class Track {
 	public int getRightVolume() {
 		return rightVolume;
 	}
-
 	public void setRightVolume(int rightVolume) {
 		this.rightVolume = rightVolume;
 	}
 
-
 	public String getTrackName() {
 		return trackName;
 	}
-
 	public void setTrackName(String trackName) {
 		this.trackName = trackName;
 	}
@@ -433,7 +342,6 @@ public class Track {
 	public String getTrackPath() {
 		return trackPath;
 	}
-
 	public void setTrackPath(String trackPath) {
 		this.trackPath = trackPath;
 	}
@@ -441,7 +349,6 @@ public class Track {
 	public String getTrackNumber() {
 		return trackNumber;
 	}
-
 	public void setTrackNumber(String trackNumber) {
 		this.trackNumber = trackNumber;
 	}
@@ -449,41 +356,25 @@ public class Track {
 	public String getSongName() {
 		return songName;
 	}
-
 	public void setSongName(String songName) {
-		
 		this.songName = songName;
 	}
 
-	
 	public int getBalance() {
 		return balance;
 	}
-	
-	
-	
-
-	public int getPlayCurrentPosition() {
-		return playCurrentPosition;
-	}
-
-
-
-	public void setPlayCurrentPosition(int playCurrentPosition) {
-		this.playCurrentPosition = playCurrentPosition;
-	}
-
-
-
 	public void setBalance(int balance) {
 		this.balance = balance;
 		this.setVolume();
 	}
-	
-	
-	
-	
-	
+
+	public int getPlayCurrentPosition() {
+		return playCurrentPosition;
+	}
+	public void setPlayCurrentPosition(int playCurrentPosition) {
+		this.playCurrentPosition = playCurrentPosition;
+	}
+
 	/*
 	* This method finalizes 'mediaPlayer' object
 	* @author joaosantacruz.com
@@ -500,5 +391,5 @@ public class Track {
 	    }
 		super.finalize();
 	}
-
 }
+
