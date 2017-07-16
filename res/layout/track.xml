@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/RelativeLayout_05"
+    android:layout_width="70dp"
+    android:layout_height="fill_parent"
+    android:layout_gravity="center_horizontal"
+    android:layout_margin="2dp"
+    android:background="@drawable/track_bg2"
+    android:gravity="center_horizontal"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <TextView
+        android:id="@+id/TrackLabel_05"
+        android:layout_width="fill_parent"
+        android:layout_height="35dp"
+        android:layout_above="@+id/EditText01"
+        android:layout_marginLeft="2dp"
+        android:layout_marginRight="2dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/fcola_03"
+        android:gravity="center_vertical|center_horizontal"
+        android:padding="2dp"
+        android:paddingTop="3dp"
+        android:text="guitar1"
+        android:textColor="@color/CLR_RED_DARK" />
+
+    <RelativeLayout
+        android:id="@+id/fader_05"
+        android:layout_width="50dp"
+        android:layout_height="120dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:background="@drawable/vol_bar_01"
+        android:gravity="center_horizontal">
+
+        <Button
+            android:id="@+id/FaderBtnUp_05"
+            style="@style/btn_fader_up"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_marginBottom="50dp"
+            android:background="@drawable/btn_vol_up_sel_selector"
+            android:gravity="center_vertical|center_horizontal"
+            android:textSize="25dp"
+            android:typeface="monospace" />
+
+        <TextView
+            android:id="@+id/FaderBtnText_05"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="%"
+            android:textColor="#E64"
+            android:textSize="40dp"
+            android:typeface="normal" />
+
+        <Button
+            android:id="@+id/FaderBtnDown_05"
+            style="@style/btn_fader_down"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:background="@drawable/btn_vol_down_sel_selector"
+            android:gravity="bottom|center_horizontal|center"
+            android:textSize="25dp"
+            android:typeface="monospace" />
+
+    </RelativeLayout>
+
+    <SeekBar
+        android:id="@+id/PanBar_01"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="180dp"
+        android:scrollbarAlwaysDrawHorizontalTrack="false" />
+
+    <Button
+        android:id="@+id/MuteBtnSelect_05"
+        style="@style/btn_mute_sel"
+        android:layout_width="50dp"
+        android:layout_height="30dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="45dp"
+        android:background="@drawable/btn_mute_sel_selector"
+        android:gravity="center_horizontal|center"
+        android:textSize="13dp"
+        android:typeface="monospace" />
+
+    <Button
+        android:id="@+id/RecBtnSelect_05"
+        style="@style/btn_rec_sel"
+        android:layout_width="50dp"
+        android:layout_height="30dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/btn_rec_sel_selector"
+        android:gravity="center_horizontal|center"
+        android:textSize="13dp"
+        android:typeface="monospace" />
+
+</RelativeLayout>
