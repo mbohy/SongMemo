@@ -62,14 +62,8 @@ public class SongMemo extends Activity {
 	private int[] faderBtnUpId = { R.id.FaderBtnUp_01, R.id.FaderBtnUp_02, R.id.FaderBtnUp_03, R.id.FaderBtnUp_04 };
 	private int[] faderBtnTextId = { R.id.FaderBtnText_01, R.id.FaderBtnText_02, R.id.FaderBtnText_03, R.id.FaderBtnText_04 };
 	private int[] faderBtnDownId = { R.id.FaderBtnDown_01, R.id.FaderBtnDown_02, R.id.FaderBtnDown_03, R.id.FaderBtnDown_04 };
-
-	private SeekBar[] panBar = new SeekBar[NUMBER_OF_TRACKS];
 	private int[] panBarId = { R.id.PanBar_01, R.id.PanBar_02, R.id.PanBar_03, R.id.PanBar_04 };
-
-	private Button[] muteBtnSelect = new Button[NUMBER_OF_TRACKS];
 	private int[] muteBtnSelectId = { R.id.MuteBtnSelect_01, R.id.MuteBtnSelect_02, R.id.MuteBtnSelect_03, R.id.MuteBtnSelect_04 };
-
-	private Button[] recBtnSelect = new Button[NUMBER_OF_TRACKS];
 	private int[] recBtnSelectId = { R.id.RecBtnSelect_01, R.id.RecBtnSelect_02, R.id.RecBtnSelect_03, R.id.RecBtnSelect_04 };
 
 	private SeekBar currentPositionBar;
@@ -109,12 +103,12 @@ public class SongMemo extends Activity {
 			TextView faderButtonText = (TextView) findViewById(faderBtnTextId[i]);
 			Button faderButtonDown = (Button) findViewById(faderBtnDownId[i]);
 
-			trackWidgets[i] = new TrackWidget(label, faderButtonUp, faderButtonDown, faderButtonText);
+			SeekBar panBar = (SeekBar) findViewById(panBarId[i]);
 
-			panBar[i] = (SeekBar) findViewById(panBarId[i]);
+			Button muteButtonSelect = (Button) findViewById(muteBtnSelectId[i]);
+			Button recordButtonSelect = (Button) findViewById(recBtnSelectId[i]);
 
-			muteBtnSelect[i] = (Button) findViewById(muteBtnSelectId[i]);
-			recBtnSelect[i] = (Button) findViewById(recBtnSelectId[i]);
+			trackWidgets[i] = new TrackWidget(label, faderButtonUp, faderButtonDown, faderButtonText, panBar, muteButtonSelect, recordButtonSelect);
 		}
 
 		mainBox = (LinearLayout) findViewById(R.id.MainBox);
@@ -142,13 +136,15 @@ public class SongMemo extends Activity {
 		 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 		for (int i = 0; i < trackWidgets.length; i++) {
-			muteBtnSelect[i].setOnClickListener(new SentinelaOnClick(i, "muteBtnSelect"));
-			recBtnSelect[i].setOnClickListener(new SentinelaOnClick(i, "recBtnSelect"));
+			TrackWidget widget = trackWidgets[i];
 
-			trackWidgets[i].faderButtonUp().setOnClickListener(new SentinelaOnClick(i, "faderBtnUp"));
-			trackWidgets[i].faderButtonDown().setOnClickListener(new SentinelaOnClick(i, "faderBtnDown"));
+			widget.muteButtonSelect().setOnClickListener(new SentinelaOnClick(i, "muteBtnSelect"));
+			widget.recordButtonSelect().setOnClickListener(new SentinelaOnClick(i, "recBtnSelect"));
 
-			panBar[i].setOnSeekBarChangeListener(new SentinelaOnClick(i, "panBar"));
+			widget.faderButtonUp().setOnClickListener(new SentinelaOnClick(i, "faderBtnUp"));
+			widget.faderButtonDown().setOnClickListener(new SentinelaOnClick(i, "faderBtnDown"));
+
+			widget.panBar().setOnSeekBarChangeListener(new SentinelaOnClick(i, "panBar"));
 		}
 		//  - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - -
 
@@ -269,12 +265,14 @@ public class SongMemo extends Activity {
 	private void updateGUIState(){
 
 		for (int i = 0; i < trackWidgets.length; i++) {
-			trackWidgets[i].label().setText(song.tracks.get(i).getTrackName());
-			muteBtnSelect[i].setSelected(song.tracks.get(i).isMuted());
-			recBtnSelect[i].setSelected(song.tracks.get(i).isRecordable());
+			TrackWidget widget = trackWidgets[i];
 
-			trackWidgets[i].faderButtonText().setText(String.format(Locale.getDefault(), "%d", song.tracks.get(i).getLeftVolume()));
-			panBar[i].setProgress(song.tracks.get(i).getBalance());
+			widget.label().setText(song.tracks.get(i).getTrackName());
+			widget.muteButtonSelect().setSelected(song.tracks.get(i).isMuted());
+			widget.recordButtonSelect().setSelected(song.tracks.get(i).isRecordable());
+
+			widget.faderButtonText().setText(String.format(Locale.getDefault(), "%d", song.tracks.get(i).getLeftVolume()));
+			widget.panBar().setProgress(song.tracks.get(i).getBalance());
 		}
 
 		lyricsTextBox.setText(song.getLyricsText());
@@ -600,12 +598,12 @@ public class SongMemo extends Activity {
 			Log.v("JOAO", "CLICK - - - -  " + element + " - - track-" + i);
 			
 			if (element == "muteBtnSelect") {
-				muteBtnSelect[i].setSelected(song.toggleMute(i));
+				trackWidgets[i].muteButtonSelect().setSelected(song.toggleMute(i));
 				vib.vibrate(25);
 			}
 
 			if (element == "recBtnSelect"){
-				recBtnSelect[i].setSelected(song.toggleRecordable(i));
+				trackWidgets[i].recordButtonSelect().setSelected(song.toggleRecordable(i));
 				vib.vibrate(25);
 			}
 
@@ -622,8 +620,8 @@ public class SongMemo extends Activity {
 
 		@Override
 		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-			Log.v("JOAO", "SET Balance " + i + " - " + panBar[i].getProgress());
-			song.setBalance(i, panBar[i].getProgress());
+			Log.v("JOAO", "SET Balance " + i + " - " + trackWidgets[i].panBar().getProgress());
+			song.setBalance(i, trackWidgets[i].panBar().getProgress());
 			updateGUIState();
 		}
 
@@ -641,12 +639,20 @@ public class SongMemo extends Activity {
 		private final Button faderButtonUp;
 		private final Button faderButtonDown;
 		private final TextView faderButtonText;
+		private final SeekBar panBar;
+		private final Button muteButtonSelect;
+		private final Button recordButtonSelect;
 
-		TrackWidget(TextView label, Button faderButtonUp, Button faderButtonDown, TextView faderButtonText) {
+		TrackWidget(TextView label, Button faderButtonUp, Button faderButtonDown, TextView faderButtonText,
+					SeekBar panBar, Button muteButtonSelect, Button recordButtonSelect) {
+
 			this.label = label;
 			this.faderButtonUp = faderButtonUp;
 			this.faderButtonDown = faderButtonDown;
 			this.faderButtonText = faderButtonText;
+			this.panBar = panBar;
+			this.muteButtonSelect = muteButtonSelect;
+			this.recordButtonSelect = recordButtonSelect;
 		}
 
 		TextView label() {
@@ -663,6 +669,18 @@ public class SongMemo extends Activity {
 
 		TextView faderButtonText() {
 			return faderButtonText;
+		}
+
+		SeekBar panBar() {
+			return panBar;
+		}
+
+		Button muteButtonSelect() {
+			return muteButtonSelect;
+		}
+
+		Button recordButtonSelect() {
+			return recordButtonSelect;
 		}
 	}
 }
