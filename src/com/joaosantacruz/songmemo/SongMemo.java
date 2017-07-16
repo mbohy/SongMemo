@@ -52,20 +52,15 @@ public class SongMemo extends Activity {
 
 	private LinearLayout mainLayout;
 
-	private TextView[] trackLabel = new TextView[NUMBER_OF_TRACKS];
-	private int[] trackLabelId = { R.id.TrackLabel_01, R.id.TrackLabel_02, R.id.TrackLabel_03, R.id.TrackLabel_04 };
-	
 	private EditText lyricsTextBox;
 	private LinearLayout mainBox;
 	private String oldLyricsText;
 
-	private Button[] faderBtnUp = new Button[NUMBER_OF_TRACKS];
+	private TrackWidget[] trackWidgets = new TrackWidget[NUMBER_OF_TRACKS];
+
+	private int[] trackLabelId = { R.id.TrackLabel_01, R.id.TrackLabel_02, R.id.TrackLabel_03, R.id.TrackLabel_04 };
 	private int[] faderBtnUpId = { R.id.FaderBtnUp_01, R.id.FaderBtnUp_02, R.id.FaderBtnUp_03, R.id.FaderBtnUp_04 };
-
-	private TextView[] faderBtnText = new TextView[NUMBER_OF_TRACKS];
 	private int[] faderBtnTextId = { R.id.FaderBtnText_01, R.id.FaderBtnText_02, R.id.FaderBtnText_03, R.id.FaderBtnText_04 };
-
-	private Button[] faderBtnDown = new Button[NUMBER_OF_TRACKS];
 	private int[] faderBtnDownId = { R.id.FaderBtnDown_01, R.id.FaderBtnDown_02, R.id.FaderBtnDown_03, R.id.FaderBtnDown_04 };
 
 	private SeekBar[] panBar = new SeekBar[NUMBER_OF_TRACKS];
@@ -107,12 +102,14 @@ public class SongMemo extends Activity {
 		TextView songTitleLabel = (TextView) findViewById(R.id.SongTitleLabel);
 		
 		/* UI Elements definition */
-		for (int i = 0; i < NUMBER_OF_TRACKS; i++) {
-			trackLabel[i] = (TextView) findViewById(trackLabelId[i]);
+		for (int i = 0; i < trackWidgets.length; i++) {
+			TextView label = (TextView) findViewById(trackLabelId[i]);
 
-			faderBtnUp[i] = (Button) findViewById(faderBtnUpId[i]);
-			faderBtnText[i] = (TextView) findViewById(faderBtnTextId[i]);
-			faderBtnDown[i] = (Button) findViewById(faderBtnDownId[i]);
+			Button faderButtonUp  = (Button) findViewById(faderBtnUpId[i]);
+			TextView faderButtonText = (TextView) findViewById(faderBtnTextId[i]);
+			Button faderButtonDown = (Button) findViewById(faderBtnDownId[i]);
+
+			trackWidgets[i] = new TrackWidget(label, faderButtonUp, faderButtonDown, faderButtonText);
 
 			panBar[i] = (SeekBar) findViewById(panBarId[i]);
 
@@ -121,6 +118,11 @@ public class SongMemo extends Activity {
 		}
 
 		mainBox = (LinearLayout) findViewById(R.id.MainBox);
+		// Adding an additional track programatically:
+		// LayoutInflater inflater =
+		// 		(LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		// inflater.inflate(R.layout.track, mainBox, true);
+
 		lyricsTextBox = (EditText) findViewById(R.id.LyricsTextBox);
 		
 		// Control bar Buttons definition
@@ -139,11 +141,13 @@ public class SongMemo extends Activity {
 		 * 
 		 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-		for (int i = 0; i < trackLabel.length; i++) {
+		for (int i = 0; i < trackWidgets.length; i++) {
 			muteBtnSelect[i].setOnClickListener(new SentinelaOnClick(i, "muteBtnSelect"));
 			recBtnSelect[i].setOnClickListener(new SentinelaOnClick(i, "recBtnSelect"));
-			faderBtnDown[i].setOnClickListener(new SentinelaOnClick(i, "faderBtnDown"));
-			faderBtnUp[i].setOnClickListener(new SentinelaOnClick(i, "faderBtnUp"));
+
+			trackWidgets[i].faderButtonUp().setOnClickListener(new SentinelaOnClick(i, "faderBtnUp"));
+			trackWidgets[i].faderButtonDown().setOnClickListener(new SentinelaOnClick(i, "faderBtnDown"));
+
 			panBar[i].setOnSeekBarChangeListener(new SentinelaOnClick(i, "panBar"));
 		}
 		//  - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - -
@@ -251,8 +255,8 @@ public class SongMemo extends Activity {
 			}
 		});
 
-		for (TextView label: trackLabel) {
-			registerForContextMenu(label);
+		for (TrackWidget widget : trackWidgets) {
+			registerForContextMenu(widget.label());
 		}
 
 		registerForContextMenu(songTitleLabel);
@@ -264,11 +268,12 @@ public class SongMemo extends Activity {
 	 */
 	private void updateGUIState(){
 
-		for (int i = 0; i < trackLabel.length; i++) {
-			trackLabel[i].setText(song.tracks.get(i).getTrackName());
+		for (int i = 0; i < trackWidgets.length; i++) {
+			trackWidgets[i].label().setText(song.tracks.get(i).getTrackName());
 			muteBtnSelect[i].setSelected(song.tracks.get(i).isMuted());
 			recBtnSelect[i].setSelected(song.tracks.get(i).isRecordable());
-			faderBtnText[i].setText(String.format(Locale.getDefault(), "%d", song.tracks.get(i).getLeftVolume()));
+
+			trackWidgets[i].faderButtonText().setText(String.format(Locale.getDefault(), "%d", song.tracks.get(i).getLeftVolume()));
 			panBar[i].setProgress(song.tracks.get(i).getBalance());
 		}
 
@@ -355,9 +360,9 @@ public class SongMemo extends Activity {
 		int trackNumber = -1;
 
 		// EDIT - TRACK n
-		for (int i = 0; i < trackLabel.length; i++) {
+		for (int i = 0; i < trackWidgets.length; i++) {
 			if (v.getId() == trackLabelId[i]) {
-				menu.setHeaderTitle("Edit  '" + trackLabel[i].getText());
+				menu.setHeaderTitle("Edit  '" + trackWidgets[i].label.getText());
 				trackNumber = i;
 				break;
 			}
@@ -389,7 +394,7 @@ public class SongMemo extends Activity {
 
 				public void onClick(DialogInterface dialog, int optButton) {
 					String trackName = input.getText().toString().trim();
-					trackLabel[item.getGroupId()].setText(song.renameTrack(trackName, item.getGroupId()));
+					trackWidgets[item.getGroupId()].label().setText(song.renameTrack(trackName, item.getGroupId()));
 				}
 			});
 
@@ -605,11 +610,11 @@ public class SongMemo extends Activity {
 			}
 
 			if (element == "faderBtnUp") {
-				faderBtnText[i].setText(String.format(Locale.getDefault(), "%d", song.volumeUp(i)));
+				trackWidgets[i].faderButtonText().setText(String.format(Locale.getDefault(), "%d", song.volumeUp(i)));
 			}
 
 			if (element == "faderBtnDown"){
-				faderBtnText[i].setText(String.format(Locale.getDefault(), "%d", song.volumeDown(i)));
+				trackWidgets[i].faderButtonText().setText(String.format(Locale.getDefault(), "%d", song.volumeDown(i)));
 			}
 
 			updateGUIState();
@@ -628,6 +633,36 @@ public class SongMemo extends Activity {
 
 		@Override
 		public void onStopTrackingTouch(SeekBar seekBar) {
+		}
+	}
+
+	private class TrackWidget {
+		private final TextView label;
+		private final Button faderButtonUp;
+		private final Button faderButtonDown;
+		private final TextView faderButtonText;
+
+		TrackWidget(TextView label, Button faderButtonUp, Button faderButtonDown, TextView faderButtonText) {
+			this.label = label;
+			this.faderButtonUp = faderButtonUp;
+			this.faderButtonDown = faderButtonDown;
+			this.faderButtonText = faderButtonText;
+		}
+
+		TextView label() {
+			return label;
+		}
+
+		Button faderButtonUp() {
+			return faderButtonUp;
+		}
+
+		Button faderButtonDown() {
+			return faderButtonDown;
+		}
+
+		TextView faderButtonText() {
+			return faderButtonText;
 		}
 	}
 }
