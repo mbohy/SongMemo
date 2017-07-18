@@ -235,9 +235,8 @@ public class SongMemo extends Activity {
 			}
 		});
 
-		for (TrackWidget widget : trackWidgets) {
-			registerForContextMenu(widget.label());
-		}
+		for (int i = 0; i < trackWidgets.length; i++)
+			trackWidgets[i].label().setOnCreateContextMenuListener(new TrackLabelOnCreateContextMenuListener(i));
 
 		registerForContextMenu(songTitleLabel);
 	}
@@ -354,26 +353,6 @@ public class SongMemo extends Activity {
 		}
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-		int trackNumber = -1;
-
-		// EDIT - TRACK n
-		for (int i = 0; i < trackWidgets.length; i++) {
-			if (!(v instanceof TextView))
-				continue;
-
-			TextView view = (TextView) v;
-			if (view.getText().equals(trackWidgets[i].label.getText())) {
-				menu.setHeaderTitle("Edit  '" + trackWidgets[i].label.getText());
-				trackNumber = i;
-				break;
-			}
-		}
-
-		if (trackNumber >= 0) {
-			menu.add(trackNumber, v.getId(), 1, "Rename track");
-			menu.add(trackNumber, v.getId(), 2, "EFX");
-			menu.add(trackNumber, v.getId(), 3, "Clean");
-		}
 	}
 
 	@Override
@@ -433,7 +412,7 @@ public class SongMemo extends Activity {
 
 	public boolean onCreateOptionsMenu(Menu menu) {
 		new MenuInflater(getApplication()).inflate(R.menu.menu, menu);
-		return(super.onPrepareOptionsMenu(menu));
+		return super.onPrepareOptionsMenu(menu);
 	}
 
 	@Override
@@ -684,6 +663,24 @@ public class SongMemo extends Activity {
 
 		Button recordButtonSelect() {
 			return recordButtonSelect;
+		}
+	}
+
+	private class TrackLabelOnCreateContextMenuListener implements View.OnCreateContextMenuListener {
+		private final int trackNumber;
+
+		TrackLabelOnCreateContextMenuListener(int trackNumber) {
+			this.trackNumber = trackNumber;
+		}
+
+		@Override
+		public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+			Log.d(SongMemo.class.getSimpleName(), "Creating context menu for " + ((TextView) v).getText());
+
+			menu.setHeaderTitle(String.format("Edit '%s'", trackWidgets[trackNumber].label.getText()));
+			menu.add(trackNumber, v.getId(), 1, "Rename track");
+			menu.add(trackNumber, v.getId(), 2, "EFX");
+			menu.add(trackNumber, v.getId(), 3, "Clean");
 		}
 	}
 }
