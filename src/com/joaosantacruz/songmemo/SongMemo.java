@@ -20,6 +20,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -30,6 +31,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
@@ -57,14 +59,6 @@ public class SongMemo extends Activity {
 	private String oldLyricsText;
 
 	private TrackWidget[] trackWidgets = new TrackWidget[NUMBER_OF_TRACKS];
-
-	private int[] trackLabelId = { R.id.TrackLabel_01, R.id.TrackLabel_02, R.id.TrackLabel_03, R.id.TrackLabel_04 };
-	private int[] faderBtnUpId = { R.id.FaderBtnUp_01, R.id.FaderBtnUp_02, R.id.FaderBtnUp_03, R.id.FaderBtnUp_04 };
-	private int[] faderBtnTextId = { R.id.FaderBtnText_01, R.id.FaderBtnText_02, R.id.FaderBtnText_03, R.id.FaderBtnText_04 };
-	private int[] faderBtnDownId = { R.id.FaderBtnDown_01, R.id.FaderBtnDown_02, R.id.FaderBtnDown_03, R.id.FaderBtnDown_04 };
-	private int[] panBarId = { R.id.PanBar_01, R.id.PanBar_02, R.id.PanBar_03, R.id.PanBar_04 };
-	private int[] muteBtnSelectId = { R.id.MuteBtnSelect_01, R.id.MuteBtnSelect_02, R.id.MuteBtnSelect_03, R.id.MuteBtnSelect_04 };
-	private int[] recBtnSelectId = { R.id.RecBtnSelect_01, R.id.RecBtnSelect_02, R.id.RecBtnSelect_03, R.id.RecBtnSelect_04 };
 
 	private SeekBar currentPositionBar;
 
@@ -94,31 +88,21 @@ public class SongMemo extends Activity {
 		mainLayout = (LinearLayout) findViewById(R.id.MainLayout);
 
 		TextView songTitleLabel = (TextView) findViewById(R.id.SongTitleLabel);
-		
-		/* UI Elements definition */
-		for (int i = 0; i < trackWidgets.length; i++) {
-			TextView label = (TextView) findViewById(trackLabelId[i]);
-
-			Button faderButtonUp  = (Button) findViewById(faderBtnUpId[i]);
-			TextView faderButtonText = (TextView) findViewById(faderBtnTextId[i]);
-			Button faderButtonDown = (Button) findViewById(faderBtnDownId[i]);
-
-			SeekBar panBar = (SeekBar) findViewById(panBarId[i]);
-
-			Button muteButtonSelect = (Button) findViewById(muteBtnSelectId[i]);
-			Button recordButtonSelect = (Button) findViewById(recBtnSelectId[i]);
-
-			trackWidgets[i] = new TrackWidget(label, faderButtonUp, faderButtonDown, faderButtonText, panBar, muteButtonSelect, recordButtonSelect);
-		}
 
 		mainBox = (LinearLayout) findViewById(R.id.MainBox);
-		// Adding an additional track programatically:
-		// LayoutInflater inflater =
-		// 		(LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		// inflater.inflate(R.layout.track, mainBox, true);
+		LayoutInflater inflater =
+				(LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+		/* UI Elements definition */
+		for (int i = 0; i < trackWidgets.length; i++) {
+			RelativeLayout track = (RelativeLayout) inflater.inflate(R.layout.track, mainBox, false);
+			TrackWidget trackWidget = buildTrackWidget(track);
+			trackWidgets[i] = trackWidget;
+			mainBox.addView(track);
+		}
 
 		lyricsTextBox = (EditText) findViewById(R.id.LyricsTextBox);
-		
+
 		// Control bar Buttons definition
 		stopButton = (Button) findViewById(R.id.StopBtn);
 		recButton = (Button) findViewById(R.id.RecBtn);
@@ -258,6 +242,21 @@ public class SongMemo extends Activity {
 		registerForContextMenu(songTitleLabel);
 	}
 
+	private TrackWidget buildTrackWidget(RelativeLayout trackLayout) {
+        TextView label = (TextView) trackLayout.getChildAt(0);
+		Button muteButtonSelect = (Button) trackLayout.getChildAt(1);
+		Button recordButtonSelect = (Button) trackLayout.getChildAt(2);
+		SeekBar panBar = (SeekBar) trackLayout.getChildAt(3);
+
+		RelativeLayout faderLayout = (RelativeLayout) trackLayout.getChildAt(4);
+
+        Button faderButtonUp  = (Button) faderLayout.getChildAt(0);
+        TextView faderButtonText = (TextView) faderLayout.getChildAt(1);
+        Button faderButtonDown = (Button) faderLayout.getChildAt(2);
+
+		return new TrackWidget(label, faderButtonUp, faderButtonDown, faderButtonText, panBar, muteButtonSelect, recordButtonSelect);
+	}
+
 	/*
 	 * Update/load UI elements 
 	 * @author joaosantacruz.com
@@ -359,7 +358,11 @@ public class SongMemo extends Activity {
 
 		// EDIT - TRACK n
 		for (int i = 0; i < trackWidgets.length; i++) {
-			if (v.getId() == trackLabelId[i]) {
+			if (!(v instanceof TextView))
+				continue;
+
+			TextView view = (TextView) v;
+			if (view.getText().equals(trackWidgets[i].label.getText())) {
 				menu.setHeaderTitle("Edit  '" + trackWidgets[i].label.getText());
 				trackNumber = i;
 				break;
