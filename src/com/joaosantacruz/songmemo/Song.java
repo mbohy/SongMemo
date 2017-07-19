@@ -6,6 +6,7 @@
 
 package com.joaosantacruz.songmemo;
 
+import android.os.Environment;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -19,7 +20,7 @@ import java.util.ArrayList;
 public class Song {
 
 	private static final String DEFAULT_SONG = "UntitledSong";
-	private static final String APPDIR = "/sdcard/SongMemo/";
+	private static final String APPDIR = Environment.getExternalStorageDirectory().getPath() + "/SongMemo/";
 	private static final String LYRICS_FILE = "lyrics.html";
 	private static final String SETTINGS_FILE = "settings.txt";
 
@@ -27,8 +28,7 @@ public class Song {
 	
 	private boolean isRecordingSong = false;
 	private boolean isPlayingSong = false;
-	private boolean isShowingLyrics = false;
-	
+
 	String songName = DEFAULT_SONG;
 	private String lyricsText = "";
 	
@@ -64,29 +64,26 @@ public class Song {
 	*/
 	String openSong(String songname) {
 
-		if (isSongOpened) closeSong();
+		if (isSongOpened)
+			closeSong();
+
 		this.songName = songname;
 		touchDirectory(APPDIR + songName);
 		touchFile(APPDIR + songName + "/" + LYRICS_FILE);
 		touchFile(APPDIR + songName + "/" + SETTINGS_FILE);
 		
-		tracks.add(new Track(this.songName, "01")); 		// TRACK1
-		tracks.add(new Track(this.songName, "02")); 		// TRACK2
-		tracks.add(new Track(this.songName, "03")); 		// TRACK3
-		tracks.add(new Track(this.songName, "04")); 		// TRACK4
+		tracks.add(new Track(this.songName, "01"));
+		tracks.add(new Track(this.songName, "02"));
+		tracks.add(new Track(this.songName, "03"));
+		tracks.add(new Track(this.songName, "04"));
 
 		try {
-			this.openSettings();
+			openSettings();
+			setLyricsText(openLyrics());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
-		try {
-			this.setLyricsText(this.openLyrics());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		 
 		isSongOpened = true;
 
 		return songName;
@@ -98,8 +95,9 @@ public class Song {
 	*/
 	String renameSong(String songname) {
 		
-		String actualSongName = this.songName;
+		String actualSongName = songName;
 		closeSong();
+
 		Log.v("JOAO", "Rename SONG '" + actualSongName + " to " + songname + "' = = = = = = ");
 		File orig_dir = new File(APPDIR + actualSongName);
 		File dest_dir = new File(APPDIR + songname);
@@ -115,7 +113,7 @@ public class Song {
 	private void closeSong() {
 		
 		saveSettings();
-		this.saveLyrics(this.getLyricsText());
+		saveLyrics(getLyricsText());
 
 		isSongOpened = false;
 		tracks.clear();
@@ -143,6 +141,7 @@ public class Song {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+
 			tracks.get(trackNumber).setRecorded(false);
 			Log.v("JOAO", "CLEAR Track '" + tracks.get(trackNumber).getTrackPath() + "' = = = = = = ");
 
