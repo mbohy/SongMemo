@@ -42,85 +42,98 @@ import java.util.Locale;
 
 public class SongMemo extends Activity {
 
-	private static final String PREFS_FILE_NAME = "myPrefsFile";
 	private static final int NUMBER_OF_TRACKS = 4;
-	public static final int RENAME_TRACK = 1;
-	public static final int CLEAR_TRACK = 3;
+	private static final int RENAME_TRACK = 1;
+	private static final int CLEAR_TRACK = 3;
 
 	private Song song;
 
-	private boolean isPressingSeekBar = false;
-
-	private int selectedBg = 0;
-	private int[] drawableBg = { R.drawable.bg_01, R.drawable.bg_02, R.drawable.bg_03, R.drawable.bg_04, R.drawable.bg_07, R.drawable.bg_08, R.drawable.bg_06, R.drawable.bg_09, R.drawable.bg_10, R.drawable.bg_11, R.drawable.bg_12 };
-
-	private LinearLayout mainLayout;
+	private LinearLayout mainBox;
+	private Theme theme;
 
 	private EditText lyricsTextBox;
-	private LinearLayout mainBox;
 	private String oldLyricsText;
 
-	private TrackWidget[] trackWidgets = new TrackWidget[NUMBER_OF_TRACKS];
+	private TrackWidget[] trackWidgets;
 
+	private boolean isPressingSeekBar = false;
 	private SeekBar currentPositionBar;
 
-	private Button stopButton;
-	private Button recButton;
 	private Button playButton;
 	private Button lyricsButton;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-
-		song = new Song();
+		makeWindowFullScreen();
 		super.onCreate(savedInstanceState);
-		
-		// set fullScreen mode
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);  
-		
 		setContentView(R.layout.main);
-
-		// Restore preferences - bg
-		SharedPreferences settings = getSharedPreferences(PREFS_FILE_NAME, 0);
-		this.selectedBg = settings.getInt("selectedBg_pref", 0);
 
 		Log.v("JOAO", "APP START - Display UI");
 
-		mainLayout = (LinearLayout) findViewById(R.id.MainLayout);
-
-		TextView songTitleLabel = (TextView) findViewById(R.id.SongTitleLabel);
-
 		mainBox = (LinearLayout) findViewById(R.id.MainBox);
-		LayoutInflater inflater =
-				(LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-		/* UI Elements definition */
-		for (int i = 0; i < trackWidgets.length; i++) {
-			RelativeLayout track = (RelativeLayout) inflater.inflate(R.layout.track, mainBox, false);
-			TrackWidget trackWidget = buildTrackWidget(track);
-			trackWidgets[i] = trackWidget;
-			mainBox.addView(track);
-		}
+		LinearLayout mainLayout = (LinearLayout) findViewById(R.id.MainLayout);
+		theme = new Theme(mainLayout);
+
+		song = new Song();
 
 		lyricsTextBox = (EditText) findViewById(R.id.LyricsTextBox);
+		registerTextChangedListenerOnLyricsBox(lyricsTextBox);
 
-		// Control bar Buttons definition
-		stopButton = (Button) findViewById(R.id.StopBtn);
-		recButton = (Button) findViewById(R.id.RecBtn);
+		trackWidgets = buildTrackWidgets(mainBox);
+		registerOnClickTrackWidgetButtons(trackWidgets);
+		registerOnCreateContextMenuForTrackWidgets(trackWidgets);
+
+		currentPositionBar = (SeekBar) findViewById(R.id.CurrentPositionBar);
+		registerOnSeekBarChange(currentPositionBar);
+
+		Button recButton = (Button) findViewById(R.id.RecBtn);
+		registerOnClickRecButton(recButton);
+
+		Button stopButton = (Button) findViewById(R.id.StopBtn);
+		registerOnClickStopButton(stopButton, recButton);
+
 		playButton = (Button) findViewById(R.id.PlayBtn);
+		registerOnClickPlayButton(playButton);
+
 		lyricsButton = (Button) findViewById(R.id.LyricsBtn);
+		registerOnClickLyricsButton(lyricsButton);
 
-		currentPositionBar = (SeekBar)findViewById(R.id.CurrentPositionBar);
-		
-		updateGUIState();
+		registerContextMenuForSongTitle();
 
-		/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-		 * 
-		 * 	   UI elements Definition
-		 * 
-		 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+		updateGUIState(trackWidgets, song, lyricsTextBox);
+	}
 
+	private void registerContextMenuForSongTitle() {
+		TextView songTitleLabel = (TextView) findViewById(R.id.SongTitleLabel);
+		registerForContextMenu(songTitleLabel);
+	}
+
+	private void registerOnCreateContextMenuForTrackWidgets(TrackWidget[] trackWidgets) {
+		for (int i = 0; i < trackWidgets.length; i++)
+			trackWidgets[i].label().setOnCreateContextMenuListener(new TrackLabelOnCreateContextMenuListener(i));
+	}
+
+	private void registerTextChangedListenerOnLyricsBox(final EditText lyricsTextBox) {
+		lyricsTextBox.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void onTextChanged(CharSequence text, int start, int before, int after) {
+				song.setLyricsText(lyricsTextBox.getText().toString());
+				song.saveSettings();
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+			}
+		});
+	}
+
+	private void registerOnClickTrackWidgetButtons(TrackWidget[] trackWidgets) {
 		for (int i = 0; i < trackWidgets.length; i++) {
 			TrackWidget widget = trackWidgets[i];
 
@@ -132,76 +145,9 @@ public class SongMemo extends Activity {
 
 			widget.panBar().setOnSeekBarChangeListener(new SentinelaOnClick(i, "panBar"));
 		}
-		//  - - - - - - - - - - - - - -  - - - - - - - - - - - - - - - - - - - -
+	}
 
-		/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-		 * 
-		 * 	   Main controls Events       position / stop  /  record  / play
-		 * 
-		 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-		
-		//Main Play-Position Control
-		currentPositionBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				if (isPressingSeekBar) {
-					currentPositionBar.setProgress(song.setPlayPosition(currentPositionBar.getProgress()));
-				}
-			}
-
-			public void onStartTrackingTouch(SeekBar seekBar) {
-				isPressingSeekBar = true;
-			}
-
-			public void onStopTrackingTouch(SeekBar seekBar) {
-				isPressingSeekBar = false;
-			}
-		});
-
-		stopButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				try {
-					stopButton.setSelected(song.songStop());
-					recButton.setSelected(false);
-					playButton.setSelected(false);
-					lyricsButton.setSelected(false);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-
-		recButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				try {
-					recButton.setSelected(song.songRecord());
-					if (!song.isRecordingSong() && !song.isPlayingSong()) {
-						Toast mToast = Toast.makeText(getApplicationContext(), "No track selected to record!", Toast.LENGTH_SHORT);
-				    	mToast.show();
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-
-		playButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				playButton.setSelected(song.songPlay(currentPositionBar.getProgress()));
-				if (song.isPlayingSong() && !song.isRecordingSong()) {
-					new Thread(new Runnable() {
-						public void run() {
-							dealWithPlay();
-						}
-					}).start();
-				}
-				if (!song.isPlayingSong() && !song.isRecordingSong()) {
-					Toast mToast = Toast.makeText(getApplicationContext(), "Nothing to play. All tracks are empty!", Toast.LENGTH_SHORT);
-			    	mToast.show();
-				}	
-			}
-		});
-
+	private void registerOnClickLyricsButton(Button lyricsButton) {
 		lyricsButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 
@@ -223,24 +169,95 @@ public class SongMemo extends Activity {
 				}
 			}
 		});
+	}
 
-		lyricsTextBox.addTextChangedListener(new TextWatcher() {
-			public void onTextChanged(CharSequence text, int start, int before, int after) {
-				song.setLyricsText(lyricsTextBox.getText().toString());
-				song.saveSettings();
-			}
+	private void registerOnClickPlayButton(final Button playButton) {
+		playButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				playButton.setSelected(song.songPlay(currentPositionBar.getProgress()));
+				if (song.isPlayingSong() && !song.isRecordingSong()) {
+					new Thread(new Runnable() {
+						public void run() {
+							dealWithPlay(isPressingSeekBar);
+						}
+					}).start();
+				}
 
-			public void afterTextChanged(Editable editable) {
-			}
-
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+				if (!song.isPlayingSong() && !song.isRecordingSong()) {
+					Toast mToast = Toast.makeText(getApplicationContext(), "Nothing to play. All tracks are empty!", Toast.LENGTH_SHORT);
+			    	mToast.show();
+				}
 			}
 		});
+	}
 
-		for (int i = 0; i < trackWidgets.length; i++)
-			trackWidgets[i].label().setOnCreateContextMenuListener(new TrackLabelOnCreateContextMenuListener(i));
+	private void registerOnClickRecButton(final Button recButton) {
+		recButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				try {
+					recButton.setSelected(song.songRecord());
+					if (!song.isRecordingSong() && !song.isPlayingSong()) {
+						Toast mToast = Toast.makeText(getApplicationContext(), "No track selected to record!", Toast.LENGTH_SHORT);
+				    	mToast.show();
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
 
-		registerForContextMenu(songTitleLabel);
+	private void registerOnClickStopButton(final Button stopButton, final Button recButton) {
+		stopButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				try {
+					stopButton.setSelected(song.songStop());
+					recButton.setSelected(false);
+					playButton.setSelected(false);
+					lyricsButton.setSelected(false);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	private void registerOnSeekBarChange(final SeekBar currentPositionBar) {
+		currentPositionBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				if (isPressingSeekBar)
+					currentPositionBar.setProgress(song.setPlayPosition(currentPositionBar.getProgress()));
+			}
+
+			public void onStartTrackingTouch(SeekBar seekBar) {
+				isPressingSeekBar = true;
+			}
+
+			public void onStopTrackingTouch(SeekBar seekBar) {
+				isPressingSeekBar = false;
+			}
+		});
+	}
+
+	private TrackWidget[] buildTrackWidgets(LinearLayout mainBox) {
+		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+		TrackWidget[] trackWidgets = new TrackWidget[NUMBER_OF_TRACKS];
+
+		for (int i = 0; i < trackWidgets.length; i++) {
+			RelativeLayout track = (RelativeLayout) inflater.inflate(R.layout.track, mainBox, false);
+			TrackWidget trackWidget = buildTrackWidget(track);
+			trackWidgets[i] = trackWidget;
+			mainBox.addView(track);
+		}
+
+		return trackWidgets;
+	}
+
+	private void makeWindowFullScreen() {
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 	}
 
 	private TrackWidget buildTrackWidget(RelativeLayout trackLayout) {
@@ -258,12 +275,7 @@ public class SongMemo extends Activity {
 		return new TrackWidget(label, faderButtonUp, faderButtonDown, faderButtonText, panBar, muteButtonSelect, recordButtonSelect);
 	}
 
-	/*
-	 * Update/load UI elements 
-	 * @author joaosantacruz.com
-	 */
-	private void updateGUIState(){
-
+	private void updateGUIState(TrackWidget[] trackWidgets, Song song, EditText lyricsTextBox) {
 		for (int i = 0; i < trackWidgets.length; i++) {
 			TrackWidget widget = trackWidgets[i];
 
@@ -275,18 +287,14 @@ public class SongMemo extends Activity {
 			widget.panBar().setProgress(song.tracks.get(i).getBalance());
 		}
 
-		lyricsTextBox.setText(song.getLyricsText());
-        
-		mainLayout.setBackgroundDrawable(getResources().getDrawable(drawableBg[this.selectedBg]));
-
 		song.saveSettings();
+
+		lyricsTextBox.setText(song.getLyricsText());
+
+		theme.restore();
 	}
 
-	/*
-	* This method deals with play action - Current position bar - control
-	* @author joaosantacruz.com
-	*/
-	private void dealWithPlay() {
+	private void dealWithPlay(boolean isPressingSeekBar) {
 
 		int maxPosition = song.maxTrackDuration("track_duration");
 
@@ -306,31 +314,22 @@ public class SongMemo extends Activity {
 				} 
 			}
 
-			if(!song.tracks.get(song.maxTrackDuration("track_number")).mediaPlayer.isPlaying()) break;
+			if (!song.tracks.get(song.maxTrackDuration("track_number")).mediaPlayer.isPlaying())
+				break;
 		}
 
 		song.songStop();
 		currentPositionBar.setProgress(0);
+
 		Message msg = handler.obtainMessage();
 		handler.sendMessage(msg);
 	}
 
-	/*
-	* This handler deals with end-of-play
-	* @author joaosantacruz.com
-	*/
-	protected final Handler handler = new Handler() {
+	private final Handler handler = new Handler() {
 		public void handleMessage(Message msg) {
 			playButton.setSelected(false);
 		}
 	};
-
-	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	 * 
-	 * 	   	Context Menu . Track options - Used on track's label long press
-	 * 		@author joaosantacruz.com
-	 * 
-	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
@@ -339,19 +338,8 @@ public class SongMemo extends Activity {
 		
 		// Change App Background -- - - - -- - - - - - - - - -
 		if (v.getId() == R.id.SongTitleLabel) {
-			if ((selectedBg + 1) >= drawableBg.length) {
-				this.selectedBg = 0;
-			} else {
-				this.selectedBg++;
-			}
-			mainLayout.setBackgroundDrawable(getResources().getDrawable(drawableBg[selectedBg]));
+			theme.moveToNext();
 
-			SharedPreferences settings = getSharedPreferences(PREFS_FILE_NAME, 0);
-			SharedPreferences.Editor editor = settings.edit();
-			editor.putInt("selectedBg_pref", this.selectedBg);
-
-			// Commit the edits!
-			editor.commit();
 		}
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -399,13 +387,7 @@ public class SongMemo extends Activity {
 		return true;
 	}
 
-	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	 * 
-	 * 	   	MAIN menu
-	 * 		@author joaosantacruz.com
-	 * 
-	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		new MenuInflater(getApplication()).inflate(R.menu.menu, menu);
 		return super.onPrepareOptionsMenu(menu);
@@ -512,8 +494,7 @@ public class SongMemo extends Activity {
 				}
 			});
 
-			alert2.setNegativeButton("Cancel",
-					new DialogInterface.OnClickListener() {
+			alert2.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int optButton) {
 					dialog.cancel();
 				}
@@ -539,6 +520,7 @@ public class SongMemo extends Activity {
 					dialog.cancel();
 				}
 			});
+
 			alertAbout.show();
 			break;
 		}
@@ -547,7 +529,7 @@ public class SongMemo extends Activity {
 		if (item.getItemId() == 4444) {
 			TextView songTitleLabel  = (TextView) findViewById(R.id.SongTitleLabel);
 			songTitleLabel.setText(song.openSong((String) item.getTitle()));
-			updateGUIState();
+			updateGUIState(trackWidgets, song, lyricsTextBox);
 		}
 
 		return super.onOptionsItemSelected(item);
@@ -592,14 +574,14 @@ public class SongMemo extends Activity {
 				trackWidgets[i].faderButtonText().setText(String.format(Locale.getDefault(), "%d", song.volumeDown(i)));
 			}
 
-			updateGUIState();
+			updateGUIState(trackWidgets, song, lyricsTextBox);
 		}
 
 		@Override
 		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 			Log.v("JOAO", "SET Balance " + i + " - " + trackWidgets[i].panBar().getProgress());
 			song.setBalance(i, trackWidgets[i].panBar().getProgress());
-			updateGUIState();
+			updateGUIState(trackWidgets, song, lyricsTextBox);
 		}
 
 		@Override
@@ -675,6 +657,53 @@ public class SongMemo extends Activity {
 			menu.setHeaderTitle(String.format("Edit '%s'", trackWidgets[trackNumber].label.getText()));
 			menu.add(trackNumber, v.getId(), RENAME_TRACK, "Rename track");
 			menu.add(trackNumber, v.getId(), CLEAR_TRACK, "Clear track");
+		}
+	}
+
+	private class Theme {
+
+		private static final String PREFS_FILE_NAME = "myPrefsFile";
+		private static final String SELECTED_BG_PREF = "selectedBg_pref";
+
+		private final int[] drawableBg = {
+				R.drawable.bg_01, R.drawable.bg_02, R.drawable.bg_03,
+				R.drawable.bg_04, R.drawable.bg_07, R.drawable.bg_08,
+				R.drawable.bg_06, R.drawable.bg_09, R.drawable.bg_10,
+				R.drawable.bg_11, R.drawable.bg_12 };
+
+		private final LinearLayout mainLayout;
+		private int selectedBg = 0;
+
+		Theme(LinearLayout mainLayout) {
+            this.mainLayout = mainLayout;
+		}
+
+		private void restore() {
+			SharedPreferences settings = getSharedPreferences(PREFS_FILE_NAME, 0);
+			selectedBg = settings.getInt(SELECTED_BG_PREF, 0);
+
+			update(selectedBg);
+		}
+
+		void moveToNext() {
+			if ((selectedBg + 1) >= drawableBg.length)
+				selectedBg = 0;
+			else
+				selectedBg++;
+
+			update(selectedBg);
+			save();
+		}
+
+		private void update(int selectedBg) {
+			mainLayout.setBackgroundDrawable(getResources().getDrawable(drawableBg[selectedBg]));
+		}
+
+		private void save() {
+			SharedPreferences settings = getSharedPreferences(PREFS_FILE_NAME, 0);
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putInt(SELECTED_BG_PREF, selectedBg);
+			editor.commit();
 		}
 	}
 }
