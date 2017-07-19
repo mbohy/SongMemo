@@ -397,135 +397,31 @@ public class SongMemo extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 
-		/* = = = = = = = = = = = = = = =    MENU OPTION - NEW    = = = = = = = = = = = = = = = = = = = = = = =*/
-		case R.id.newmenubtn:
+			case R.id.newmenubtn:
+				handleNewSong();
+				break;
 
-			final AlertDialog.Builder alert = new AlertDialog.Builder(this);
-			final EditText input = new EditText(this);
+			case R.id.openmenubtn:
+				handleOpenSong(item);
+				break;
 
-			InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-			// only will trigger it if no physical keyboard is open
-			mgr.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+			case R.id.deletemenubtn:
+				handleDeleteSong();
+				break;
 
-			alert.setView(input);
-			alert.setTitle("Please name your song:");
+			case R.id.saveas:
+				handleSaveSongAs();
+				break;
 
-			alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int optButton) {
-					String songName = input.getText().toString().trim();
-					final String msg = song.newSong(songName);
-					TextView songTitleLabel  = (TextView) findViewById(R.id.SongTitleLabel);
-					songTitleLabel.setText(songName);
-					Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();			
-				}
-			});
+			case R.id.quitmenubtn:
+				handleQuit();
+				break;
 
-			alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int optButton) {
-					dialog.cancel();
-				}
-			});
-
-			alert.show();
-			break;
-
-			/* = = = = = = = = = = = = = = =    MENU OPTION - OPEN    = = = = = = = = = = = = = = = = = = = = = = =*/
-		case R.id.openmenubtn:
-
-			File[] listOfSongs = song.getSongsList();
-			item.getSubMenu().clear();
-			for (File song: listOfSongs) {
-				if (song.isDirectory()) {
-					item.getSubMenu().add(99, 4444, 0, song.getName());
-				}
-			}
-
-			break;
-
-			/* = = = = = = = = = = = = = = =    MENU OPTION - DELETE    = = = = = = = = = = = = = = = = = = = = = = =*/
-		case R.id.deletemenubtn:     
-
-			final AlertDialog.Builder alertDelete = new AlertDialog.Builder(this);
-			alertDelete.setIcon(android.R.drawable.ic_dialog_alert);
-
-			alertDelete.setTitle("Delete Song");
-			alertDelete.setMessage("Are you sure you want to delete this song and all of its tracks?");
-
-			alertDelete.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int optButton) {
-					if (song.deleteSong()) {
-						TextView songTitleLabel  = (TextView) findViewById(R.id.SongTitleLabel);
-						songTitleLabel.setText(song.songName);
-						Toast.makeText(getApplicationContext(), "Song deleted", Toast.LENGTH_SHORT).show();
-					}
-				}
-			});
-
-			alertDelete.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int optButton) {
-					dialog.cancel();
-				}
-			});
-
-			alertDelete.show();
-
-			break;
-
-			/* = = = = = = = = = = = = =    MENU OPTION - MIX & SHARE    = = = = = = = = = = = = = = = = = = =*/
-		case R.id.saveas:     
-
-			final AlertDialog.Builder alert2 = new AlertDialog.Builder(this);
-			final EditText input2 = new EditText(this);
-
-			InputMethodManager mgr2 = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-			// only will trigger it if no physical keyboard is open
-			mgr2.showSoftInput(input2, InputMethodManager.SHOW_IMPLICIT);
-
-			alert2.setView(input2);
-			alert2.setTitle("Save song as:");
-
-			alert2.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int optButton) {
-					String songName = input2.getText().toString().trim();
-					final String msg = song.renameSong(songName);
-					TextView songTitleLabel  = (TextView) findViewById(R.id.SongTitleLabel);
-					songTitleLabel.setText(songName);
-					Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-				}
-			});
-
-			alert2.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int optButton) {
-					dialog.cancel();
-				}
-			});
-
-			alert2.show();
-			break;
-
-			/* = = = = = = = = = = = = = = =    MENU OPTION - QUIT    = = = = = = = = = = = = = = = = = = = = = = =*/
-		case R.id.quitmenubtn:
-			Toast.makeText(getApplicationContext(), "Saving SongMemo's settings...\nSee you next time!", Toast.LENGTH_SHORT).show();
-			terminate();
-			break;
-
-			/* = = = = = = = = = = = = = = =    MENU OPTION - ABOUT    = = = = = = = = = = = = = = = = = = = = = = =*/
-		case R.id.aboutmenubtn:     
-			final AlertDialog.Builder alertAbout = new AlertDialog.Builder(this);
-			alertAbout.setTitle("SongMemo's message");
-			alertAbout.setIcon(android.R.drawable.ic_menu_info_details);
-			alertAbout.setMessage("As a musician and software developer, I've committed myself to build a multi-track audio recorder (4 track like) for the Android platform.\n\nOpenness brings us fast access to knowledge and, as consequence, better solutions. That is why SongMemo is a Free and Living Open Source project.\n\nContributors are welcome!\n\nIf you have ideas that you wish to see implemented or if you somehow want to be a part of SongMemo's developer team, feel free to contact me.\n\nFurther info, please visit:\nwww.joasantacruz.com/songmemo");
-			alertAbout.setNegativeButton("Close", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int optButton) {
-					dialog.cancel();
-				}
-			});
-
-			alertAbout.show();
-			break;
+			case R.id.aboutmenubtn:
+				handleAboutApp();
+				break;
 		}
-		
-		// if this is submenu item - - - - - -
+
 		if (item.getItemId() == 4444) {
 			TextView songTitleLabel  = (TextView) findViewById(R.id.SongTitleLabel);
 			songTitleLabel.setText(song.openSong((String) item.getTitle()));
@@ -533,6 +429,133 @@ public class SongMemo extends Activity {
 		}
 
 		return super.onOptionsItemSelected(item);
+	}
+
+	private void handleAboutApp() {
+		final AlertDialog.Builder alertAbout = new AlertDialog.Builder(this);
+		alertAbout.setTitle("SongMemo's message");
+		alertAbout.setIcon(android.R.drawable.ic_menu_info_details);
+		alertAbout.setMessage(
+				"As a musician and software developer, I've committed myself to " +
+				"build a multi-track audio recorder (4 track like) for the " +
+				"Android platform.\n\n" +
+
+				"Openness brings us fast access to knowledge and, as a consequence, " +
+				"better solutions. That is why SongMemo is a Free and Living Open " +
+				"Source project.\n\n" +
+				"Contributors are welcome!\n\n" +
+				"If you have ideas that you wish to see implemented or if you somehow " +
+				"want to be a part of SongMemo's developer team, feel free to contact me.\n\n" +
+				"Further info, please visit:\nwww.joasantacruz.com/songmemo"
+		);
+		alertAbout.setNegativeButton("Close", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int optButton) {
+				dialog.cancel();
+			}
+		});
+
+		alertAbout.show();
+	}
+
+	private void handleQuit() {
+		Toast.makeText(getApplicationContext(), "Saving SongMemo's settings...\nSee you next time!", Toast.LENGTH_SHORT).show();
+		terminate();
+	}
+
+	private void handleSaveSongAs() {
+		final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+		final EditText input = new EditText(this);
+
+		InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		// only will trigger it if no physical keyboard is open
+		inputMethodManager.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+
+		alertBuilder.setView(input);
+		alertBuilder.setTitle("Save song as:");
+
+		alertBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int optButton) {
+				String songName = input.getText().toString().trim();
+				final String msg = song.renameSong(songName);
+				TextView songTitleLabel = (TextView) findViewById(R.id.SongTitleLabel);
+				songTitleLabel.setText(songName);
+				Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+			}
+		});
+
+		alertBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int optButton) {
+				dialog.cancel();
+			}
+		});
+
+		alertBuilder.show();
+	}
+
+	private void handleDeleteSong() {
+		final AlertDialog.Builder alertDelete = new AlertDialog.Builder(this);
+		alertDelete.setIcon(android.R.drawable.ic_dialog_alert);
+
+		alertDelete.setTitle("Delete Song");
+		alertDelete.setMessage("Are you sure you want to delete this song and all of its tracks?");
+
+		alertDelete.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int optButton) {
+				if (song.deleteSong()) {
+					TextView songTitleLabel = (TextView) findViewById(R.id.SongTitleLabel);
+					songTitleLabel.setText(song.songName);
+					Toast.makeText(getApplicationContext(), "Song deleted", Toast.LENGTH_SHORT).show();
+				}
+			}
+		});
+
+		alertDelete.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int optButton) {
+				dialog.cancel();
+			}
+		});
+
+		alertDelete.show();
+	}
+
+	private void handleOpenSong(MenuItem item) {
+		File[] listOfSongs = song.getSongsList();
+		item.getSubMenu().clear();
+		for (File song : listOfSongs) {
+			if (song.isDirectory()) {
+				item.getSubMenu().add(99, 4444, 0, song.getName());
+			}
+		}
+	}
+
+	private void handleNewSong() {
+		final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+		final EditText input = new EditText(this);
+
+		InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		// only will trigger it if no physical keyboard is open
+		mgr.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+
+		alert.setView(input);
+		alert.setTitle("Please name your song:");
+
+		alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int optButton) {
+				String songName = input.getText().toString().trim();
+				final String msg = song.newSong(songName);
+				TextView songTitleLabel = (TextView) findViewById(R.id.SongTitleLabel);
+				songTitleLabel.setText(songName);
+				Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+			}
+		});
+
+		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int optButton) {
+				dialog.cancel();
+			}
+		});
+
+		alert.show();
 	}
 
 	public void terminate() {
