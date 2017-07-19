@@ -44,6 +44,8 @@ public class SongMemo extends Activity {
 
 	private static final String PREFS_FILE_NAME = "myPrefsFile";
 	private static final int NUMBER_OF_TRACKS = 4;
+	public static final int RENAME_TRACK = 1;
+	public static final int CLEAR_TRACK = 3;
 
 	private Song song;
 
@@ -360,7 +362,7 @@ public class SongMemo extends Activity {
 
 		switch (item.getOrder()) {
 
-		case 1: // EDIT track - RENAME
+		case RENAME_TRACK:
 			Log.v("JOAO", "CONTEXT MENU - RENAME track + + + + + + ");
 
 			final AlertDialog.Builder alert = new AlertDialog.Builder(this);
@@ -370,7 +372,7 @@ public class SongMemo extends Activity {
 			alert.setTitle("Insert a new track name:");
 			input.requestFocus();
 
-			alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+			alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 
 				public void onClick(DialogInterface dialog, int optButton) {
 					String trackName = input.getText().toString().trim();
@@ -387,15 +389,9 @@ public class SongMemo extends Activity {
 			alert.show();
 			break;
 
-		case 2: // EDIT track - EFX
-			Toast mToast = Toast.makeText(getApplicationContext(), "This feature is not yet implemented.", Toast.LENGTH_SHORT);
-	    	mToast.show();
-			Log.v("JOAO", "CONTEXT MENU - EFX track + + + + + + ");
-			break;
-
-		case 3: // EDIT track - CLEAN
+		case CLEAR_TRACK:
+			Log.v("JOAO", "CONTEXT MENU - CLEAR track + + + + + + ");
 			song.clearTrack(item.getGroupId());
-			Log.v("JOAO", "CONTEXT MENU - CLEAN track + + + + + + ");
 
 			break;
 		}
@@ -454,7 +450,6 @@ public class SongMemo extends Activity {
 			/* = = = = = = = = = = = = = = =    MENU OPTION - OPEN    = = = = = = = = = = = = = = = = = = = = = = =*/
 		case R.id.openmenubtn:
 
-			//menu.setHeaderTitle("Open Song");
 			File[] listOfSongs = song.getSongsList();
 			item.getSubMenu().clear();
 			for (File song: listOfSongs) {
@@ -471,15 +466,15 @@ public class SongMemo extends Activity {
 			final AlertDialog.Builder alertDelete = new AlertDialog.Builder(this);
 			alertDelete.setIcon(android.R.drawable.ic_dialog_alert);
 
-			alertDelete.setTitle("Delete Song!");
-			alertDelete.setMessage("Are you shure you want to delete this song and all it's tracks?");
+			alertDelete.setTitle("Delete Song");
+			alertDelete.setMessage("Are you sure you want to delete this song and all of its tracks?");
 
-			alertDelete.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+			alertDelete.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int optButton) {
 					if (song.deleteSong()) {
 						TextView songTitleLabel  = (TextView) findViewById(R.id.SongTitleLabel);
 						songTitleLabel.setText(song.songName);
-						Toast.makeText(getApplicationContext(), "Song is deleted!", Toast.LENGTH_SHORT).show();			
+						Toast.makeText(getApplicationContext(), "Song deleted", Toast.LENGTH_SHORT).show();
 					}
 				}
 			});
@@ -529,7 +524,7 @@ public class SongMemo extends Activity {
 
 			/* = = = = = = = = = = = = = = =    MENU OPTION - QUIT    = = = = = = = = = = = = = = = = = = = = = = =*/
 		case R.id.quitmenubtn:
-			Toast.makeText(getApplicationContext(), "Saving SongMemo's settings...\nSee you nex time!", Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), "Saving SongMemo's settings...\nSee you next time!", Toast.LENGTH_SHORT).show();
 			terminate();
 			break;
 
@@ -538,7 +533,7 @@ public class SongMemo extends Activity {
 			final AlertDialog.Builder alertAbout = new AlertDialog.Builder(this);
 			alertAbout.setTitle("SongMemo's message");
 			alertAbout.setIcon(android.R.drawable.ic_menu_info_details);
-			alertAbout.setMessage("As musician and software developer, I've comited myself to build a multitrack audio recorder (4 track like) for the Android platform.\n\nOpenness bring us fast access to knowledge and, as consequence, better solutions. That is why SongMemo is a Free and Living Open Source project.\n\nContributors are welcome!\n\nIf you have ideas that you wish to see implemented or if you somehow want to be a part of songMemo's developer team, feel free to contact me.\n\nFurther info, please visit:\nwww.joasantacruz.com/songmemo");
+			alertAbout.setMessage("As a musician and software developer, I've committed myself to build a multi-track audio recorder (4 track like) for the Android platform.\n\nOpenness brings us fast access to knowledge and, as consequence, better solutions. That is why SongMemo is a Free and Living Open Source project.\n\nContributors are welcome!\n\nIf you have ideas that you wish to see implemented or if you somehow want to be a part of SongMemo's developer team, feel free to contact me.\n\nFurther info, please visit:\nwww.joasantacruz.com/songmemo");
 			alertAbout.setNegativeButton("Close", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int optButton) {
 					dialog.cancel();
@@ -678,9 +673,8 @@ public class SongMemo extends Activity {
 			Log.d(SongMemo.class.getSimpleName(), "Creating context menu for " + ((TextView) v).getText());
 
 			menu.setHeaderTitle(String.format("Edit '%s'", trackWidgets[trackNumber].label.getText()));
-			menu.add(trackNumber, v.getId(), 1, "Rename track");
-			menu.add(trackNumber, v.getId(), 2, "EFX");
-			menu.add(trackNumber, v.getId(), 3, "Clean");
+			menu.add(trackNumber, v.getId(), RENAME_TRACK, "Rename track");
+			menu.add(trackNumber, v.getId(), CLEAR_TRACK, "Clear track");
 		}
 	}
 }
