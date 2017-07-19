@@ -426,9 +426,9 @@ public class SongMemo extends Activity {
 			mgr.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
 
 			alert.setView(input);
-			alert.setTitle("Please name your song?");
+			alert.setTitle("Please name your song:");
 
-			alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+			alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int optButton) {
 					String songName = input.getText().toString().trim();
 					final String msg = song.newSong(songName);
@@ -500,9 +500,9 @@ public class SongMemo extends Activity {
 			mgr2.showSoftInput(input2, InputMethodManager.SHOW_IMPLICIT);
 
 			alert2.setView(input2);
-			alert2.setTitle("Save song as?");
+			alert2.setTitle("Save song as:");
 
-			alert2.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+			alert2.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int optButton) {
 					String songName = input2.getText().toString().trim();
 					final String msg = song.renameSong(songName);
@@ -544,7 +544,7 @@ public class SongMemo extends Activity {
 		}
 		
 		// if this is submenu item - - - - - -
-		if (item.getItemId() == 4444){
+		if (item.getItemId() == 4444) {
 			TextView songTitleLabel  = (TextView) findViewById(R.id.SongTitleLabel);
 			songTitleLabel.setText(song.openSong((String) item.getTitle()));
 			updateGUIState();

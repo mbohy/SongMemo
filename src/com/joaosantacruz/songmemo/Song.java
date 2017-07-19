@@ -48,7 +48,7 @@ public class Song {
 		String msg;
 		
 		if (touchDirectory(APPDIR + songname)) {
-			msg = "The song '" + songname + "! Please insert another name.";
+			msg = "The song '" + songname + "' already exists! Please choose another name.";
 			openSong(songname);
 		} else {
 			msg = "The song '" + songname + "' was successfully created.";
