@@ -18,24 +18,23 @@ import java.util.ArrayList;
 
 public class Song {
 
-	static final String DEFAULT_SONG = "UntitledSong";
-	static final String APPDIR = "/sdcard/SongMemo/";
-	static final String LYRICS_FILE = "lyrics.html";
-	static final String SETTINGS_FILE = "settings.txt";
+	private static final String DEFAULT_SONG = "UntitledSong";
+	private static final String APPDIR = "/sdcard/SongMemo/";
+	private static final String LYRICS_FILE = "lyrics.html";
+	private static final String SETTINGS_FILE = "settings.txt";
 
 	private boolean isSongOpened = false;
 	
 	private boolean isRecordingSong = false;
 	private boolean isPlayingSong = false;
-	private boolean isPausedSong = false;
 	private boolean isShowingLyrics = false;
 	
-	protected String songName = DEFAULT_SONG;
-	protected String lyricsText = "";
+	String songName = DEFAULT_SONG;
+	private String lyricsText = "";
 	
-	ArrayList<Track> tracks = new ArrayList<Track>();
+	ArrayList<Track> tracks = new ArrayList<>();
 
-	public Song(SongMemo songMemo) {
+	public Song() {
 		touchDirectory(APPDIR);
 		openSong(songName);
 	}
@@ -44,9 +43,9 @@ public class Song {
 	* This method creates a new song and open it 
 	* @author joaosantacruz.com
 	*/
-	public String newSong(String songname) {
+	String newSong(String songname) {
 		
-		String msg = "";
+		String msg;
 		
 		if (touchDirectory(APPDIR + songname)) {
 			msg = "The song '" + songname + "! Please insert another name.";
@@ -63,7 +62,7 @@ public class Song {
 	* This method Opens song and Initialize it 
 	* @author joaosantacruz.com
 	*/
-	public String openSong(String songname) {
+	String openSong(String songname) {
 
 		if (isSongOpened) closeSong();
 		this.songName = songname;
@@ -97,7 +96,7 @@ public class Song {
 	* This method renames song (file)
 	* @author joaosantacruz.com
 	*/
-	public String renameSong(String songname) {
+	String renameSong(String songname) {
 		
 		String actualSongName = this.songName;
 		closeSong();
@@ -113,28 +112,18 @@ public class Song {
 	* This method closes song
 	* @author joaosantacruz.com
 	*/
-	public void closeSong() {
+	private void closeSong() {
 		
 		saveSettings();
-		
-		for (Track track : tracks) {
-			try {
-				track.finalize();
-			} catch (Throwable e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
 		this.saveLyrics(this.getLyricsText());
 
 		isSongOpened = false;
-		tracks.removeAll(tracks);
+		tracks.clear();
 
 		Log.v("JOAO", "CLOSE SONG '" + songName + "' = = = = = = ");
 	}
 
-	public boolean deleteSong() {
+	boolean deleteSong() {
 		closeSong();
 		File f = new File(APPDIR + songName);
 		deleteDirectory(f);
@@ -144,7 +133,7 @@ public class Song {
 		return true;
 	}
 
-	public boolean clearTrack(int trackNumber) {
+	boolean clearTrack(int trackNumber) {
 		File f = new File(tracks.get(trackNumber).getTrackPath());
 		if (f.exists()) {
 			f.delete();
@@ -157,14 +146,13 @@ public class Song {
 			tracks.get(trackNumber).setRecorded(false);
 			Log.v("JOAO", "CLEAR Track '" + tracks.get(trackNumber).getTrackPath() + "' = = = = = = ");
 
-			return (true);
+			return true;
 		}
 
 		return false;
 	}
 
-
-	public boolean deleteDirectory(File path) {
+	private boolean deleteDirectory(File path) {
 		if (path.exists()) {
 			File[] files = path.listFiles();
 			for (File dir : files) {
@@ -176,12 +164,12 @@ public class Song {
 			}
 		}
 
-		return (path.delete());
+		return path.delete();
 	}
 
 
 	/* Toggle individual track mute button */
-	public boolean toggleMute(int TrackNumber) {
+	boolean toggleMute(int TrackNumber) {
 
 		if (tracks.get(TrackNumber).isMuted()) {
 			tracks.get(TrackNumber).setMuted(false);
@@ -193,7 +181,7 @@ public class Song {
 	}
 
 	/* Toggle individual track record button */
-	public boolean toggleRecordable(int TrackNumber) {
+	boolean toggleRecordable(int TrackNumber) {
 		
 		if (!isRecordingSong) {
 			if (tracks.get(TrackNumber).isRecordable()) {
@@ -207,26 +195,14 @@ public class Song {
 		return tracks.get(TrackNumber).isRecordable();
 	}
 
-	/* Toggle song lyrics */
-	public boolean toggleLyrics() {
-
-		if (isShowingLyrics()) {
-			setShowingLyrics(false);
-		} else {
-			setShowingLyrics(true);
-		}
-
-		return isShowingLyrics();
-	}
-	
-	public void setAllTracksRecordable(boolean value) {
+	private void setAllTracksRecordable(boolean value) {
         for (Track track : tracks) {
             track.setRecordable(value);
         }
 	}
 	
 	/* Stop Song Recording/Play */
-	public boolean songStop() {
+	boolean songStop() {
 		for (Track track : tracks) {
 			if (track.isPlaying()) {
 				track.stopPlaying();
@@ -246,8 +222,7 @@ public class Song {
 	}
 
 	/* Start Song Recording  */
-	public boolean songRecord() {
-
+	boolean songRecord() {
 		if (!isRecordingSong && !isPlayingSong) {
 
 			for (Track track : tracks) {
@@ -272,7 +247,7 @@ public class Song {
 	}
 
 	/* Play Song */
-	public boolean songPlay(int currentPositionBarValue) {
+	boolean songPlay(int currentPositionBarValue) {
 		Log.v("JOAO", "SONG-pos-Bar: " + currentPositionBarValue );
 		if (!isRecordingSong && !isPlayingSong) {
 
@@ -287,46 +262,30 @@ public class Song {
 		return isPlayingSong;
 	}
 
-	/* Create song directory and the 4 tracks files */
-	public boolean createLyrics() {
-			return (touchFile(APPDIR + "/" + songName + "/" +  LYRICS_FILE));
-	}
-
-	public void saveLyrics(String lyrics_text) {
-
+	void saveLyrics(String lyrics_text) {
 		File f = new File(APPDIR + songName + "/" + LYRICS_FILE);
-		Log.v("JOAO", "SAVES LYRISCS '" + lyrics_text + "' to " + APPDIR + songName + "/" + LYRICS_FILE);
-		FileWriter fw = null;
+		Log.v("JOAO", "SAVES LYRICS '" + lyrics_text + "' to " + APPDIR + songName + "/" + LYRICS_FILE);
+		FileWriter fw;
 		try {
 			fw = new FileWriter(f);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		BufferedWriter out = new BufferedWriter(fw);
-
-		try {
+			BufferedWriter out = new BufferedWriter(fw);
 			out.write(lyrics_text);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		try {
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 	}
 
-	public String getLyricsText() {
+	String getLyricsText() {
 		return lyricsText;
 	}
-	public void setLyricsText(String lyricsText) {
+	void setLyricsText(String lyricsText) {
 		this.lyricsText = lyricsText;
 	}
 
 	// Read Lyrics
-	public String openLyrics() throws Exception {
+	private String openLyrics() throws Exception {
 
 		File f = new File(APPDIR + songName + "/" + LYRICS_FILE);
 		FileReader fr = new FileReader(APPDIR + songName + "/" + LYRICS_FILE);
@@ -335,7 +294,7 @@ public class Song {
 		this.lyricsText = "";
 
 		if (f.exists() && f.length() > 1) {
-			String line = "";
+			String line;
 			while ((line = br.readLine()) != null) {
 				this.lyricsText = line;
 			}
@@ -348,7 +307,7 @@ public class Song {
 		return lyricsText;
 	}
 
-	public boolean touchDirectory(String dirname) {
+	private boolean touchDirectory(String dirname) {
 		File f = new File(dirname);
 		if (f.exists()) {
 			return true;
@@ -358,7 +317,7 @@ public class Song {
 		}
 	}
 
-	public boolean touchFile(String filename) {
+	private boolean touchFile(String filename) {
 		File f = new File(filename);
 		if (f.exists()) {
 			return true;
@@ -372,20 +331,12 @@ public class Song {
 		}
 	}
 
-	public File[] getSongsList() {
+	File[] getSongsList() {
 		File d = new File(APPDIR);
 		return d.listFiles();
 	}
 
-	public void setShowingLyrics(boolean isShowingLyrics) {
-		this.isShowingLyrics = isShowingLyrics;
-	}
-	public boolean isShowingLyrics() {
-		return isShowingLyrics;
-	}
-
-	public int volumeUp(int TrackNumber) {
-
+	int volumeUp(int TrackNumber) {
 		if (tracks.get(TrackNumber).getLeftVolume() < 10) {
 			tracks.get(TrackNumber).setLeftVolume(tracks.get(TrackNumber).getLeftVolume() + 1);
 			tracks.get(TrackNumber).setRightVolume(tracks.get(TrackNumber).getRightVolume() + 1);
@@ -397,7 +348,7 @@ public class Song {
 		return tracks.get(TrackNumber).getLeftVolume();
 	}
 
-	public int volumeDown(int TrackNumber) {
+	int volumeDown(int TrackNumber) {
 
 		if (tracks.get(TrackNumber).getLeftVolume() >= 1) {
 			tracks.get(TrackNumber).setLeftVolume(tracks.get(TrackNumber).getLeftVolume() - 1);
@@ -410,14 +361,14 @@ public class Song {
 		return tracks.get(TrackNumber).getLeftVolume();
 	}
 	
-	public String renameTrack(String trackName, int trackNumber) {
+	String renameTrack(String trackName, int trackNumber) {
 		tracks.get(trackNumber).setTrackName(trackName);
 		saveSettings();
 
 		return trackName;
 	}
 
-	public int maxTrackDuration(String typeOrindex) {
+	int maxTrackDuration(String typeOrindex) {
 
 		int maxTrackDuration = 0;
 		int maxTrackNumber = 0;
@@ -427,7 +378,7 @@ public class Song {
 			if (track.isRecorded() && !track.isRecording()) {
 				if (track.mediaPlayer != null) {
 					if (track.mediaPlayer.getDuration()>maxTrackDuration) {
-						maxTrackDuration = (int)track.mediaPlayer.getDuration();
+						maxTrackDuration = track.mediaPlayer.getDuration();
 						maxTrackNumber = i;
 					}
 				}
@@ -444,30 +395,18 @@ public class Song {
 		
 	}
 	
-	public int setPlayPosition(int newPosition) {
-		
+	int setPlayPosition(int newPosition) {
 		if (isPlayingSong) {
-			for (Track track : tracks) {
-				track.mediaPlayer.seekTo((int)(newPosition*maxTrackDuration("track_duration")/100));
-			}
+			for (Track track : tracks)
+				track.mediaPlayer.seekTo(newPosition * maxTrackDuration("track_duration") / 100);
 		}
 
 		return newPosition;
 	}
 
 
-	public void saveSettings() {
+	void saveSettings() {
 
-		File f = new File(APPDIR + songName + "/" + SETTINGS_FILE);
-
-		FileWriter fw = null;
-		try {
-			fw = new FileWriter(f);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		BufferedWriter out = new BufferedWriter(fw);
 		String sep = ";";
 		String songSettings = "";
 
@@ -489,12 +428,11 @@ public class Song {
 			songSettings += sep + track.getRightVolume() + "\r\n";
 		}
 
+		File f = new File(APPDIR + songName + "/" + SETTINGS_FILE);
 		try {
+			FileWriter fw = new FileWriter(f);
+			BufferedWriter out = new BufferedWriter(fw);
 			out.write(songSettings);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		try {
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -502,7 +440,7 @@ public class Song {
 	}
 
 	// Read settings
-	public void openSettings() throws Exception {
+	private void openSettings() throws Exception {
 
 		File f = new File(APPDIR + songName + "/" + SETTINGS_FILE);
 		FileReader fr = new FileReader(APPDIR + songName + "/" + SETTINGS_FILE);
@@ -545,48 +483,13 @@ public class Song {
 
 	}
 
-	public boolean isRecordingSong() {
+	boolean isRecordingSong() {
 		return isRecordingSong;
 	}
-	public void setRecordingSong(boolean isRecordingSong) {
-		this.isRecordingSong = isRecordingSong;
-	}
-
-	public boolean isPlayingSong() {
+	boolean isPlayingSong() {
 		return isPlayingSong;
 	}
-	public void setPlayingSong(boolean isPlayingSong) {
-		this.isPlayingSong = isPlayingSong;
-	}
-
-	public boolean isPausedSong() {
-		return isPausedSong;
-	}
-	public void setPausedSong(boolean isPausedSong) {
-		this.isPausedSong = isPausedSong;
-	}
-
-	public String getSongName() {
-		return songName;
-	}
-	public void setSongName(String songName) {
-		this.songName = songName;
-	}
-
-	public void setBalance(int i, int progress) {
+	void setBalance(int i, int progress) {
 		tracks.get(i).setBalance(progress);
-	}
-
-	public boolean soloTrack(int trackIndex) {
-		Log.v("JOAO", "SOOOOOOOOOLOOOOOOOOOOOOOOOOOOOOOOOO '" + trackIndex);
-		for (int i = 0; i < tracks.size(); i++) {
-			if (i != trackIndex) {
-				tracks.get(i).setMuted(true);
-			} else {
-				tracks.get(i).setMuted(false);
-			}
-		}
-
-		return true;
 	}
 }

@@ -70,7 +70,7 @@ public class SongMemo extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
-		song = new Song(this);
+		song = new Song();
 		super.onCreate(savedInstanceState);
 		
 		// set fullScreen mode
